@@ -7,6 +7,7 @@ CREATE TABLE users(
                       name varchar(70) not null,
                       email varchar(100) not null,
                       no_hp varchar(100) not null,
+                      password varchar(100) not null
                       primary key(id)
 )engine = innoDB;
 
