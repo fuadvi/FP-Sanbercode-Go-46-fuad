@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"final-project-go/Request"
 	"final-project-go/models"
 	"final-project-go/repository/UserRepostory"
 	"final-project-go/utilitis"
@@ -18,6 +19,7 @@ func main() {
 	router := httprouter.New()
 	router.POST("/register", Register)
 	router.POST("/login", Login)
+	router.POST("/change-password", JWTMiddleware(ChangePassword))
 	router.GET("/list-user", JWTMiddleware(ListUser))
 	http.ListenAndServe(":8080", router)
 }
@@ -45,8 +47,6 @@ func JWTMiddleware(next httprouter.Handle) httprouter.Handle {
 }
 
 func CreateToken(username string) (string, error) {
-	// Membuat payload JWT
-
 	if username == "" {
 		log.Fatal("Username tidak valid")
 	}
@@ -111,8 +111,7 @@ func Login(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 
-	// Membaca body permintaan
-	var loginReq models.LoginRequest
+	var loginReq Request.LoginRequest
 	err := json.NewDecoder(r.Body).Decode(&loginReq)
 	if err != nil {
 		http.Error(w, "Gagal membaca body permintaan", http.StatusBadRequest)
@@ -135,6 +134,35 @@ func Login(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	res := map[string]string{
 		"status": "Successfully",
 		"token":  token,
+	}
+
+	utilitis.ResponseJSON(w, res, http.StatusCreated)
+}
+
+func ChangePassword(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	if r.Header.Get("Content-Type") != "application/json" {
+		http.Error(w, "Gunakan content type application/json", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var ChangePasswordReq Request.ChangePasswordRequest
+	err := json.NewDecoder(r.Body).Decode(&ChangePasswordReq)
+	if err != nil {
+		http.Error(w, "Gagal membaca body permintaan", http.StatusBadRequest)
+		return
+	}
+
+	err = UserRepostory.ChangePassword(ctx, ChangePasswordReq)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	res := map[string]string{
+		"status": "Change Password Successfully",
 	}
 
 	utilitis.ResponseJSON(w, res, http.StatusCreated)
