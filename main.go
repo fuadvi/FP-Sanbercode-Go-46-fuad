@@ -24,6 +24,8 @@ func main() {
 	router.POST("/cars", middleware.JWTMiddleware(CreateCar))
 	router.GET("/cars", middleware.JWTMiddleware(listCar))
 	router.GET("/cars/:id", middleware.JWTMiddleware(GetCar))
+	router.PUT("/cars/:id", middleware.JWTMiddleware(UpdateCar))
+	router.DELETE("/cars/:id", middleware.JWTMiddleware(DeleteCar))
 	http.ListenAndServe(":8080", router)
 }
 
@@ -190,4 +192,55 @@ func GetCar(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 
 	utilitis.ResponseJSON(w, car, http.StatusOK)
+}
+
+func UpdateCar(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+
+	id := p.ByName("id")
+	if r.Header.Get("Content-Type") != "application/json" {
+		http.Error(w, "Gunakan content type application/json", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cencel := context.WithCancel(context.Background())
+	defer cencel()
+
+	var carReqeust Request.Car
+
+	err := json.NewDecoder(r.Body).Decode(&carReqeust)
+	fmt.Println(err)
+
+	if err != nil {
+		http.Error(w, "Gagal membaca body permintaan", http.StatusBadRequest)
+		return
+	}
+
+	err = CarRepository.Update(ctx, carReqeust, id)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	utilitis.ResponseJSON(w, "Update Successfully", http.StatusOK)
+}
+
+func DeleteCar(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	id := p.ByName("id")
+	if r.Header.Get("Content-Type") != "application/json" {
+		http.Error(w, "Gunakan content type application/json", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cencel := context.WithCancel(context.Background())
+	defer cencel()
+
+	err := CarRepository.Delete(ctx, id)
+	fmt.Println(err)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	utilitis.ResponseJSON(w, "Deleted SuccessFully", http.StatusOK)
 }
