@@ -244,3 +244,24 @@ func DeleteCar(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	utilitis.ResponseJSON(w, "Deleted SuccessFully", http.StatusOK)
 }
+
+func createTour(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	if r.Header.Get("Content-Type") != "application/json" {
+		http.Error(w, "Gunakan content type application/json", http.StatusBadRequest)
+		return
+	}
+
+	//ctx, cencel := context.WithCancel(context.Background())
+	//defer cencel()
+	//
+	//var TouReq Request.TourRequest
+	//
+	//err := json.NewDecoder(r.Body).Decode(TouReq)
+	//
+	//if err != nil {
+	//	http.Error(w, "form body harus di isi semua", http.StatusBadRequest)
+	//	return
+	//}
+
+	//err = TourRepository.Insert(ctx, TouReq)
+}
