@@ -22,6 +22,7 @@ func main() {
 	router.POST("/change-password", middleware.JWTMiddleware(ChangePassword))
 	router.GET("/list-user", middleware.JWTMiddleware(ListUser))
 	router.POST("/cars", middleware.JWTMiddleware(CreateCar))
+	router.GET("/cars", middleware.JWTMiddleware(listCar))
 	http.ListenAndServe(":8080", router)
 }
 
@@ -157,4 +158,19 @@ func CreateCar(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	utilitis.ResponseJSON(w, res, http.StatusOK)
+}
+
+func listCar(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
+	ctx, cencel := context.WithCancel(context.Background())
+	defer cencel()
+
+	cars, err := CarRepository.GetAll(ctx)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	utilitis.ResponseJSON(w, cars, http.StatusOK)
 }

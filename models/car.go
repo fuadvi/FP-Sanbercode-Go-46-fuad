@@ -10,4 +10,5 @@ type Car struct {
 	LUGGAGE     int    `json:"luggage"`
 	CARTYPE     string `json:"car_type"`
 	ISDRIVER    bool   `json:"is_driver"`
+	DURATION    string `json:"duration"`
 }

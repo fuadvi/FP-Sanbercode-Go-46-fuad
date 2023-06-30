@@ -15,8 +15,8 @@ func Insert(ctx context.Context, car Request.Car) error {
 		return errors.New("can't connect to mysql")
 	}
 
-	queryText := "INSERT INTO cars (title, price, image, description, passenger, luggage, car_type, isDriver) VALUES (?,?,?,?,?,?,?,?)"
-	_, err = db.ExecContext(ctx, queryText, car.TITLE, car.PRICE, car.IMAGE, car.DESCRIPTION, car.PASSENGER, car.LUGGAGE, car.CARTYPE, car.ISDRIVER)
+	queryText := "INSERT INTO cars (title, price, image, description, passenger, luggage, car_type, isDriver, duration) VALUES (?,?,?,?,?,?,?,?,?)"
+	_, err = db.ExecContext(ctx, queryText, car.TITLE, car.PRICE, car.IMAGE, car.DESCRIPTION, car.PASSENGER, car.LUGGAGE, car.CARTYPE, car.ISDRIVER, car.DURATION)
 
 	if err != nil {
 		return errors.New(err.Error())
