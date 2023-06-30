@@ -10,6 +10,7 @@ func GetAll(ctx context.Context) ([]models.Car, error) {
 	var cars []models.Car
 
 	db, err := config.MySQL()
+	defer db.Close()
 
 	if err != nil {
 		return nil, err

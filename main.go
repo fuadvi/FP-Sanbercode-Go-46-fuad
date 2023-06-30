@@ -23,6 +23,7 @@ func main() {
 	router.GET("/list-user", middleware.JWTMiddleware(ListUser))
 	router.POST("/cars", middleware.JWTMiddleware(CreateCar))
 	router.GET("/cars", middleware.JWTMiddleware(listCar))
+	router.GET("/cars/:id", middleware.JWTMiddleware(GetCar))
 	http.ListenAndServe(":8080", router)
 }
 
@@ -173,4 +174,20 @@ func listCar(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	utilitis.ResponseJSON(w, cars, http.StatusOK)
+}
+
+func GetCar(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+
+	ctx, cencel := context.WithCancel(context.Background())
+	defer cencel()
+
+	id := p.ByName("id")
+	car, err := CarRepository.GetCar(ctx, id)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	utilitis.ResponseJSON(w, car, http.StatusOK)
 }
