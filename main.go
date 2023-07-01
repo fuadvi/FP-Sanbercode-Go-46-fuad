@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"final-project-go/Request"
+	"final-project-go/docs"
 	"final-project-go/middleware"
 	"final-project-go/models"
 	"final-project-go/repository/CarRepository"
+	"final-project-go/repository/TourRepository"
 	"final-project-go/repository/UserRepostory"
 	"final-project-go/utilitis"
 	"fmt"
@@ -17,6 +19,13 @@ import (
 
 func main() {
 	router := httprouter.New()
+
+	docs.SwaggerInfo.Title = "Swagger Example API"
+	docs.SwaggerInfo.Description = "This is a sample server Movie."
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.Host = "localhost:8080"
+	docs.SwaggerInfo.Schemes = []string{"http", "https"}
+
 	router.POST("/register", Register)
 	router.POST("/login", Login)
 	router.POST("/change-password", middleware.JWTMiddleware(ChangePassword))
@@ -26,6 +35,21 @@ func main() {
 	router.GET("/cars/:id", middleware.JWTMiddleware(GetCar))
 	router.PUT("/cars/:id", middleware.JWTMiddleware(UpdateCar))
 	router.DELETE("/cars/:id", middleware.JWTMiddleware(DeleteCar))
+	router.POST("/tours", middleware.JWTMiddleware(CreateTour))
+
+	router.GET("/swagger/*filepath", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		filepath := ps.ByName("filepath")
+		filepath = filepath[1:]
+
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+
+		http.ServeFile(w, r, "docs/"+filepath)
+	})
+	//router.GET("/swagger/doc", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	//	http.ServeFile(w, r, "docs/swagger.yaml")
+	//})
 	http.ListenAndServe(":8080", router)
 }
 
@@ -41,6 +65,14 @@ func ListUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	utilitis.ResponseJSON(w, users, http.StatusOK)
 }
 
+// @Summary Register a new user
+// @Description Register a new user with the provided details
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param request body models.Users true "User details"
+// @Success 201 {object} map[string]string
+// @Router /register [post]
 func Register(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if r.Header.Get("Content-Type") != "application/json" {
 		http.Error(w, "Gunakan content type application/json", http.StatusBadRequest)
@@ -67,6 +99,14 @@ func Register(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	utilitis.ResponseJSON(w, res, http.StatusCreated)
 }
 
+// @Summary Login
+// @Description Authenticate user with provided credentials and generate access token
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param request body Request.LoginRequest true "Login details"
+// @Success 201 {object} map[string]string
+// @Router /login [post]
 func Login(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if r.Header.Get("Content-Type") != "application/json" {
 		http.Error(w, "Gunakan content type application/json", http.StatusBadRequest)
@@ -245,23 +285,32 @@ func DeleteCar(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	utilitis.ResponseJSON(w, "Deleted SuccessFully", http.StatusOK)
 }
 
-func createTour(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func CreateTour(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if r.Header.Get("Content-Type") != "application/json" {
 		http.Error(w, "Gunakan content type application/json", http.StatusBadRequest)
 		return
 	}
 
-	//ctx, cencel := context.WithCancel(context.Background())
-	//defer cencel()
-	//
-	//var TouReq Request.TourRequest
-	//
-	//err := json.NewDecoder(r.Body).Decode(TouReq)
-	//
-	//if err != nil {
-	//	http.Error(w, "form body harus di isi semua", http.StatusBadRequest)
-	//	return
-	//}
+	ctx, cencel := context.WithCancel(context.Background())
+	defer cencel()
 
-	//err = TourRepository.Insert(ctx, TouReq)
+	var TouReq Request.TourRequest
+
+	err := json.NewDecoder(r.Body).Decode(&TouReq)
+
+	fmt.Println(err)
+
+	if err != nil {
+		http.Error(w, "form body harus di isi semua", http.StatusBadRequest)
+		return
+	}
+
+	err = TourRepository.Insert(ctx, TouReq)
+
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	utilitis.ResponseJSON(w, "create tour successfuly", http.StatusCreated)
 }
